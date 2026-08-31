@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5ead8">
+<meta name="description" content="Track calories, macros and training in one place. Saved on your device.">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Calories">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Calorie Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='85' fill='%23c67139' opacity='.15'/%3E%3Ccircle cx='100' cy='100' r='65' fill='none' stroke='%23c67139' stroke-width='10'/%3E%3Ccircle cx='145' cy='60' r='18' fill='%237a8a5e'/%3E%3C/svg%3E">
+<style>
+:root{
+  --color-bg:#f5ead8;
+  --color-surface:#fffaf3;
+  --color-text:#201e1d;
+  --color-divider:#e0d2ba;
+
+  --color-neutral-100:#f0e4cf;
+  --color-neutral-200:#e9dcc5;
+  --color-neutral-300:#dbcbaf;
+  --color-neutral-400:#c3b192;
+  --color-neutral-600:#8a7b64;
+  --color-neutral-700:#6c5f4e;
+  --color-neutral-800:#463f36;
+
+  --color-accent:#c67139;
+  --color-accent-200:#f4dac0;
+  --color-accent-300:#ecc298;
+  --color-accent-400:#dc9c66;
+  --color-accent-500:#c67139;
+  --color-accent-600:#b2622d;
+  --color-accent-700:#8c491a;
+  --color-accent-800:#6b3712;
+
+  --color-accent-2-200:#dfe5cf;
+  --color-accent-2-400:#a9b985;
+  --color-accent-2-500:#7a8a5e;
+  --color-accent-2-700:#5a6a42;
+  --color-accent-2-800:#45532f;
+  --color-accent-2-900:#333f21;
+
+  --radius-md:14px;
+  --radius-lg:18px;
+
+  --font-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-heading:"Fraunces","Iowan Old Style",Georgia,serif;
+
+  /* Glass. Opaque by default; the @supports block below swaps in the translucent
+     versions only where backdrop-filter actually works, so nothing degrades to
+     unreadable grey on browsers that ignore the blur. */
+  --glass-nav-bg:var(--color-bg);
+  --glass-field-bg:var(--color-bg);
+  --glass-sheet-bg:var(--color-surface);
+  --glass-scrim:rgba(32,30,29,.52);
+  --glass-blur:none;
+  --glass-blur-strong:none;
+  --glass-edge:var(--color-divider);
+  --glass-sheen:none;
+  --glass-nav-shadow:0 -10px 20px -18px rgba(32,30,29,.5);
+}
+
+@supports ((-webkit-backdrop-filter:blur(2px)) or (backdrop-filter:blur(2px))){
+  :root{
+    --glass-nav-bg:color-mix(in srgb, var(--color-bg) 58%, transparent);
+    --glass-field-bg:color-mix(in srgb, var(--color-surface) 48%, transparent);
+    --glass-sheet-bg:color-mix(in srgb, var(--color-surface) 82%, transparent);
+    --glass-scrim:rgba(32,30,29,.38);
+    --glass-blur:saturate(180%) blur(16px);
+    --glass-blur-strong:saturate(190%) blur(28px);
+    --glass-edge:color-mix(in srgb, #fffaf3 62%, transparent);
+    /* the thin bright line along the top edge is what reads as "glass" rather than "faded" */
+    --glass-sheen:inset 0 1px 0 color-mix(in srgb, #fffdf8 78%, transparent);
+    --glass-nav-shadow:inset 0 1px 0 color-mix(in srgb, #fffdf8 70%, transparent), 0 -12px 30px -20px rgba(32,30,29,.5);
+  }
+}
+
+/* Some people turn transparency off at the OS level; honour it. */
+@media (prefers-reduced-transparency:reduce){
+  :root{
+    --glass-nav-bg:var(--color-bg);
+    --glass-field-bg:var(--color-bg);
+    --glass-sheet-bg:var(--color-surface);
+    --glass-scrim:rgba(32,30,29,.52);
+    --glass-blur:none;
+    --glass-blur-strong:none;
+    --glass-edge:var(--color-divider);
+    --glass-sheen:none;
+  }
+*{box-sizing:border-box}
+html{height:100%}
+html,body{margin:0;padding:0}
+body{
+  background:#e6d9c2;
+  font-family:var(--font-body);
+  color:var(--color-text);
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  justify-content:center;
+  height:100vh;
+  height:100dvh;
+  overflow:hidden;
+  overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+#shell{
+  width:100%;
+  max-width:440px;
+  background:var(--color-bg);
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  position:relative;
+  overflow:hidden;
+}
+/* the page is its own scroller, so the tab bar stays put like a native one */
+#page{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  scrollbar-width:thin;
+  scrollbar-color:color-mix(in srgb, var(--color-accent-700) 26%, transparent) transparent;
+  scrollbar-gutter:stable;
+}
+/* frosted thumb, no track — it floats over the content like the tab bar does */
+#page::-webkit-scrollbar{width:10px}
+#page::-webkit-scrollbar-track{background:transparent}
+#page::-webkit-scrollbar-thumb{
+  background:color-mix(in srgb, var(--color-accent-700) 22%, transparent);
+  border:3px solid transparent;
+  background-clip:content-box;
+  border-radius:999px;
+  -webkit-backdrop-filter:var(--glass-blur);
+  backdrop-filter:var(--glass-blur);
+}
+#page::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb, var(--color-accent-700) 38%, transparent);background-clip:content-box}
+#nav{flex:0 0 auto}
+
+@media (min-width:520px){
+  body{padding:32px 0;height:100dvh}
+  #shell{height:calc(100dvh - 64px);border-radius:28px;box-shadow:0 18px 60px -30px rgba(32,30,29,.55)}
+}
+
+h1,h2,h3{font-family:var(--font-heading);font-weight:400;margin:0}
+
+/* iOS renders unstyled button text in the system blue — pin every control to our own colours */
+button,input,select,textarea{
+  font-family:inherit;
+  color:var(--color-text);
+  -webkit-text-fill-color:currentColor;
+  -webkit-appearance:none;
+  appearance:none;
+  border-radius:0;
+}
+button{
+  color:inherit;
+  touch-action:manipulation;
+  -webkit-user-select:none;
+  user-select:none;
+}
+input,select,textarea{-webkit-user-select:text;user-select:text}
+/* controls carry their own colour; children must not fall back to the UA blue */
+button *,a{color:inherit;-webkit-text-fill-color:currentColor}
+
+:focus-visible{outline:2px solid var(--color-accent-600);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.card{border-radius:var(--radius-lg);border:1px solid var(--color-divider)}
+.elev-sm{box-shadow:0 2px 8px -6px rgba(32,30,29,.4)}
+.elev-lg{box-shadow:0 24px 60px -28px rgba(32,30,29,.7)}
+
+/* 16px is the floor: anything smaller makes iOS Safari zoom the page on focus */
+.input{
+  width:100%;font:600 16px/1.2 var(--font-body);color:var(--color-text);
+  padding:10px 14px;min-height:44px;border-radius:999px;
+  border:1px solid var(--glass-edge);
+  background:var(--glass-field-bg);
+  -webkit-backdrop-filter:var(--glass-blur);
+  backdrop-filter:var(--glass-blur);
+  box-shadow:var(--glass-sheen);
+  transition:border-color .18s ease, box-shadow .18s ease;
+}
+.input:focus{
+  border-color:color-mix(in srgb, var(--color-accent-500) 55%, transparent);
+  box-shadow:var(--glass-sheen), 0 0 0 3px color-mix(in srgb, var(--color-accent-500) 16%, transparent);
+}
+.input[type=search]{-webkit-appearance:none}
+.input[type=search]::-webkit-search-decoration,
+.input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none}
+.input::placeholder{color:var(--color-neutral-600);font-weight:500}
+select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236c5f4e' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:36px}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+.btn{border:1px solid transparent;border-radius:999px;cursor:pointer;font:700 13.5px/1 var(--font-body);padding:0 18px;min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--color-accent-500);color:#fff}
+.btn-primary:hover{background:var(--color-accent-600)}
+.btn-secondary{background:var(--color-accent-2-200);color:var(--color-accent-2-900);border-color:var(--color-accent-2-400)}
+.btn-ghost{background:transparent;color:var(--color-neutral-700);border-color:var(--color-divider)}
+.btn-block{width:100%}
+.tag{display:inline-flex;align-items:center;padding:5px 11px;border-radius:999px;font:700 11px/1 var(--font-body)}
+.tag-accent-2{background:var(--color-accent-2-200);color:var(--color-accent-2-900)}
+
+.row{display:flex}
+.col{display:flex;flex-direction:column}
+.scroll-x{display:flex;gap:7px;overflow-x:auto;margin:0 -20px;padding:1px 20px 3px;scrollbar-width:none}
+.scroll-x::-webkit-scrollbar{display:none}
+
+#page{
+  padding:calc(28px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(var(--nav-h) + 24px) calc(20px + env(safe-area-inset-left));
+  display:flex;flex-direction:column;gap:18px;
+}
+/* the bar floats over the scroller — glass needs something moving behind it to blur */
+#nav{
+  position:absolute;left:0;right:0;bottom:0;z-index:5;
+  padding:10px calc(14px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
+  display:flex;gap:6px;
+  background:var(--glass-nav-bg);
+  -webkit-backdrop-filter:var(--glass-blur-strong);
+  backdrop-filter:var(--glass-blur-strong);
+  border-top:1px solid var(--glass-edge);
+  box-shadow:var(--glass-nav-shadow);
+}
+#shell{--nav-h:calc(68px + env(safe-area-inset-bottom))}
+
+#nav button{flex:1;border:0;cursor:pointer;padding:10px 4px;border-radius:999px;background:transparent;color:var(--color-neutral-600);font:700 12px/1 var(--font-body);display:flex;flex-direction:column;align-items:center;gap:5px}
+#nav button[aria-current=page]{background:var(--color-accent-200);color:var(--color-accent-800)}
+#nav .dot{width:7px;height:7px;border-radius:999px;background:var(--color-neutral-400)}
+#nav button[aria-current=page] .dot{background:var(--color-accent-500)}
+
+#tour{position:absolute;inset:0;z-index:40;background:var(--glass-scrim);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;flex-direction:column;justify-content:flex-end;padding:20px calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));overflow-y:auto;border-radius:inherit}
+#tour .sheet{
+  width:100%;max-width:400px;margin:0 auto;padding:24px 22px 22px;
+  display:flex;flex-direction:column;gap:16px;
+  background:var(--glass-sheet-bg);
+  -webkit-backdrop-filter:var(--glass-blur-strong);
+  backdrop-filter:var(--glass-blur-strong);
+  border:1px solid var(--glass-edge);
+  border-radius:28px;
+}
+.tour-hidden{display:none!important}
+
+.bar-track{height:13px;border-radius:999px;background:var(--color-neutral-300);overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.pill-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:999px;background:var(--color-neutral-200)}
+.icon-btn{flex:none;width:28px;height:28px;border-radius:999px;border:1px solid var(--color-divider);background:transparent;cursor:pointer;font:600 14px/1 var(--font-body);color:var(--color-neutral-700)}
+.note{font:500 12.5px/1.45 var(--font-body);color:var(--color-neutral-600)}
+.eyebrow{font:600 11px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600)}
+.field-label{font:600 10.5px/1 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)}
+.insight{display:flex;gap:12px;padding:14px 16px;border-radius:var(--radius-lg);border:1px solid transparent}
+.empty{padding:14px 16px;border-radius:var(--radius-lg);background:var(--color-neutral-100);border:1px dashed var(--color-divider);font:500 12.5px/1.5 var(--font-body);color:var(--color-neutral-700)}
+</style>
+</head>
+<body>
+<div id="shell">
+  <div id="page"></div>
+  <nav id="nav" aria-label="Sections"></nav>
+  <div id="tour" class="tour-hidden" role="dialog" aria-modal="true" aria-label="How to use this app"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------------------------------------------------------- data */
+
+var KEYS = ['calories','protein','carbs','fat','fibre'];
+var META = {
+  calories:{label:'Calories',short:'kcal',unit:'kcal',color:'var(--color-accent-500)'},
+  protein: {label:'Protein', short:'protein',unit:'g',color:'var(--color-accent-2-500)'},
+  carbs:   {label:'Carbs',   short:'carbs',unit:'g',color:'var(--color-accent-400)'},
+  fat:     {label:'Fat',     short:'fat',unit:'g',color:'var(--color-accent-700)'},
+  fibre:   {label:'Fibre',   short:'fibre',unit:'g',color:'var(--color-accent-2-700)'}
+};
+var FOOD_CATS = [
+  {key:'breakfast',label:'Breakfast'},{key:'lunch',label:'Lunch'},
+  {key:'dinner',label:'Dinner'},{key:'snack',label:'Snacks'},
+  {key:'dessert',label:'Dessert'},{key:'drink',label:'Drinks'}
+];
+/* Per typical serving; rounded from standard food-composition tables */
+var FOODS = [
+  {cat:'breakfast',name:'Oats with milk & berries',serving:'60g oats',calories:420,protein:18,carbs:62,fat:10,fibre:8},
+  {cat:'breakfast',name:'Greek yoghurt & honey',serving:'200g',calories:250,protein:20,carbs:26,fat:7,fibre:0},
+  {cat:'breakfast',name:'Scrambled eggs on toast',serving:'3 eggs, 2 slices',calories:480,protein:28,carbs:34,fat:25,fibre:4},
+  {cat:'breakfast',name:'Banana & peanut butter toast',serving:'2 slices',calories:430,protein:14,carbs:52,fat:18,fibre:7},
+  {cat:'breakfast',name:'Protein pancakes',serving:'3 small',calories:390,protein:30,carbs:44,fat:9,fibre:4},
+  {cat:'lunch',name:'Chicken & rice bowl',serving:'150g chicken, 200g rice',calories:610,protein:48,carbs:62,fat:17,fibre:6},
+  {cat:'lunch',name:'Tuna sandwich',serving:'2 slices wholemeal',calories:400,protein:30,carbs:42,fat:11,fibre:6},
+  {cat:'lunch',name:'Chicken caesar salad',serving:'1 bowl',calories:520,protein:40,carbs:18,fat:32,fibre:4},
+  {cat:'lunch',name:'Lentil soup & bread',serving:'1 bowl + roll',calories:420,protein:20,carbs:58,fat:8,fibre:13},
+  {cat:'lunch',name:'Burrito bowl',serving:'1 bowl',calories:680,protein:42,carbs:76,fat:21,fibre:12},
+  {cat:'dinner',name:'Salmon, potatoes & greens',serving:'150g salmon',calories:640,protein:42,carbs:48,fat:28,fibre:7},
+  {cat:'dinner',name:'Steak & sweet potato',serving:'200g sirloin',calories:720,protein:55,carbs:46,fat:33,fibre:6},
+  {cat:'dinner',name:'Spaghetti bolognese',serving:'1 plate',calories:680,protein:38,carbs:82,fat:21,fibre:8},
+  {cat:'dinner',name:'Chicken stir-fry & noodles',serving:'1 plate',calories:590,protein:44,carbs:66,fat:15,fibre:7},
+  {cat:'dinner',name:'Tofu curry & rice',serving:'1 plate',calories:610,protein:26,carbs:74,fat:22,fibre:10},
+  {cat:'dinner',name:'Beef burger & fries',serving:'1 serving',calories:900,protein:42,carbs:82,fat:45,fibre:6},
+  {cat:'snack',name:'Protein shake (whey)',serving:'1 scoop + water',calories:190,protein:30,carbs:8,fat:3,fibre:2},
+  {cat:'snack',name:'Protein bar',serving:'60g bar',calories:220,protein:20,carbs:22,fat:7,fibre:5},
+  {cat:'snack',name:'Apple & almonds',serving:'1 apple, 25g',calories:250,protein:7,carbs:28,fat:14,fibre:7},
+  {cat:'snack',name:'Rice cakes & peanut butter',serving:'3 cakes',calories:300,protein:10,carbs:32,fat:16,fibre:4},
+  {cat:'snack',name:'Boiled eggs',serving:'2 eggs',calories:155,protein:13,carbs:1,fat:11,fibre:0},
+  {cat:'snack',name:'Cottage cheese & fruit',serving:'200g',calories:220,protein:26,carbs:18,fat:5,fibre:2},
+  {cat:'dessert',name:'Dark chocolate',serving:'30g',calories:170,protein:2,carbs:14,fat:12,fibre:3},
+  {cat:'dessert',name:'Ice cream',serving:'2 scoops',calories:280,protein:5,carbs:32,fat:15,fibre:1},
+  {cat:'dessert',name:'Brownie',serving:'1 piece',calories:350,protein:5,carbs:44,fat:18,fibre:2},
+  {cat:'dessert',name:'Fruit salad',serving:'1 bowl',calories:130,protein:2,carbs:32,fat:0,fibre:6},
+  {cat:'drink',name:'Latte (whole milk)',serving:'Regular',calories:190,protein:10,carbs:16,fat:10,fibre:0},
+  {cat:'drink',name:'Orange juice',serving:'250ml',calories:110,protein:2,carbs:26,fat:0,fibre:1},
+  {cat:'drink',name:'Beer',serving:'1 pint',calories:210,protein:2,carbs:18,fat:0,fibre:0},
+  {cat:'drink',name:'Sports drink',serving:'500ml',calories:130,protein:0,carbs:32,fat:0,fibre:0}
+];
+/* MET values, Compendium of Physical Activities (approximate, moderate effort) */
+var SPORTS = {
+  gym:{label:'Gym \u2014 weights',met:5.0}, hiit:{label:'HIIT / circuits',met:8.0},
+  crossfit:{label:'CrossFit',met:8.0}, running:{label:'Running',met:9.8},
+  jogging:{label:'Jogging (easy)',met:7.0}, cycling:{label:'Cycling',met:8.0},
+  spin:{label:'Spin class',met:8.5}, rowing:{label:'Rowing machine',met:7.0},
+  swimming:{label:'Swimming',met:8.3}, tennis:{label:'Tennis',met:7.3},
+  padel:{label:'Padel / squash',met:7.3}, football:{label:'Football',met:7.0},
+  basketball:{label:'Basketball',met:6.5}, rugby:{label:'Rugby',met:8.3},
+  boxing:{label:'Boxing / bag work',met:9.0}, martial:{label:'Martial arts',met:10.0},
+  climbing:{label:'Climbing',met:8.0}, yoga:{label:'Yoga',met:3.0},
+  pilates:{label:'Pilates',met:3.8}, mobility:{label:'Mobility / stretching',met:2.5},
+  walking:{label:'Walking',met:3.5}, hiking:{label:'Hiking',met:6.0},
+  dance:{label:'Dance',met:6.5}, golf:{label:'Golf (walking)',met:4.8},
+  skiing:{label:'Skiing / snowboard',met:7.0}, surfing:{label:'Surfing',met:5.0}
+};
+var EFFORT = {easy:{label:'Easy',f:0.85},moderate:{label:'Moderate',f:1},hard:{label:'Hard',f:1.18}};
+var PHASES = {
+  cut:{label:'Cutting',sub:'0.5\u20130.75% weight/wk down',adj:-0.18,protein:2.1,slope:-0.45},
+  maintain:{label:'Maintenance',sub:'Hold weight, build habits',adj:0,protein:1.7,slope:0},
+  lean:{label:'Lean bulk',sub:'Slow gain, minimal fat',adj:0.08,protein:1.9,slope:0.18},
+  bulk:{label:'Bulking',sub:'Faster gain, more slack',adj:0.18,protein:1.7,slope:0.4}
+};
+var TOUR = [
+  {tab:'today',kicker:'Welcome',icon:'\u25CE',accent:1,
+   title:'Your day, in one ring',
+   body:'The ring is your calorie budget. It fills as you log food and grows back as you train \u2014 so the number you see is always what you have actually got left.',
+   points:['Orange while you are on track, green once the goal is met.',
+           'Burned in training is added back automatically from your sessions.',
+           'The message under the ring tells you what to do next \u2014 including when to stop.']},
+  {tab:'today',kicker:'Step 2',icon:'\uD83C\uDF7D',accent:2,
+   title:'Log a meal in two taps',
+   body:'Search the bar or pick a category \u2014 breakfast, lunch, dinner, snacks, dessert, drinks \u2014 then tap an item to add it with its macros already filled in.',
+   points:['Tap any preloaded item; it lands in \u201CLogged today\u201D instantly.',
+           'Cooking something of your own? Use \u201CAdd an item\u201D and enter its macros once.',
+           'Tap \u00D7 on a logged row to undo a mistake.']},
+  {tab:'goals',kicker:'Step 3',icon:'\u229E',accent:1,
+   title:'Set goals you can defend',
+   body:'Open Goals and set calories, protein, carbs, fat and fibre. The app checks each one against public-health ranges and warns you if a target is too low or too high.',
+   points:['Pick your phase \u2014 cutting, maintenance, lean bulk or bulking \u2014 and the targets shift with it.',
+           'Amber and red notes are safety warnings, not suggestions. Read them.',
+           'Nothing here is medical advice; a dietitian beats an app.']},
+  {tab:'activity',kicker:'Step 4',icon:'\u26A1',accent:2,
+   title:'Plan your training week',
+   body:'Tell the app what a normal week looks like \u2014 4 gym sessions of 45 minutes, tennis twice for an hour \u2014 then log sessions as you do them.',
+   points:['Each planned sport gets its own bar so you can see what you have skipped.',
+           'Effort \u2014 easy, moderate, hard \u2014 changes the calories burned.',
+           'You get told when training and eating are out of balance, in either direction.']},
+  {tab:'trends',kicker:'Last one',icon:'\u2197',accent:1,
+   title:'Watch the month, not the day',
+   body:'Trends builds up from the days you actually log. One bad day is noise; a month of them is a pattern worth acting on.',
+   points:['Streaks count days you hit calories and protein, not perfection on all five.',
+           'Change phase whenever your goal changes \u2014 the history stays.',
+           'You can reopen this tour any time from the ? in the top corner.']}
+];
+var SPORT_COLORS = ['var(--color-accent-500)','var(--color-accent-2-500)','var(--color-accent-400)','var(--color-accent-2-700)','var(--color-accent-700)'];
+var RING_C = 2 * Math.PI * 82;
+
+/* -------------------------------------------------------------- helpers */
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function stamp(d){d=d||new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fromStamp(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function addDays(d,n){var x=new Date(d.getTime());x.setDate(x.getDate()+n);return x;}
+function mondayOf(d){var x=new Date(d.getTime());var g=(x.getDay()+6)%7;x.setDate(x.getDate()-g);x.setHours(0,0,0,0);return x;}
+function fmtDay(d){return d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});}
+function fmtShort(d){return d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});}
+function num(v,fb){var n=Number(v);return isFinite(n)?n:(fb||0);}
+
+/* ---------------------------------------------------------------- store */
+
+var STORE_KEY = 'ct.v2';
+var DEFAULTS = {
+  tab:'today',
+  phase:'lean',
+  profile:'male',
+  weight:78,
+  goals:{calories:2600,protein:165,carbs:300,fat:78,fibre:34},
+  meals:[],
+  sessions:[],
+  plan:[{id:1,sport:'gym',sessions:4,minutes:45},{id:2,sport:'tennis',sessions:2,minutes:60}],
+  history:[],
+  weightLog:[],
+  day:stamp(),
+  tourSeen:false
+};
+var PERSIST = ['phase','profile','weight','goals','meals','sessions','plan','history','weightLog','day','tourSeen'];
+
+function load(){
+  var s = {};
+  PERSIST.concat(['tab']).forEach(function(k){
+    s[k] = JSON.parse(JSON.stringify(DEFAULTS[k] !== undefined ? DEFAULTS[k] : null));
+  });
+  s.tab = 'today';
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      var d = JSON.parse(raw);
+      if(d && typeof d === 'object'){
+        PERSIST.forEach(function(k){ if(d[k] !== undefined) s[k] = d[k]; });
+      }
+    }
+  }catch(e){}
+  return s;
+}
+
+var S = load();
+S.draft = {name:'',calories:'',protein:'',carbs:'',fat:'',fibre:''};
+S.query = '';
+S.foodCat = 'breakfast';
+S.customOpen = false;
+S.sessionDraft = {sport:'gym',minutes:45,effort:'moderate'};
+S.planDraft = {sport:'running',sessions:2,minutes:30};
+S.tourOpen = !S.tourSeen;
+S.tourStep = 0;
+
+/* roll the day over: archive yesterday's totals, clear today's meals */
+(function rollover(){
+  var today = stamp();
+  if(S.day !== today){
+    var t = totals();
+    if(S.meals.length){
+      pushHistory(S.day, t.calories, t.protein, sessionsOn(S.day).length > 0);
+    }
+    S.meals = [];
+    S.day = today;
+    save();
+  }
+})();
+
+function save(){
+  try{
+    var out = {};
+    PERSIST.forEach(function(k){ out[k] = S[k]; });
+    out.day = stamp();
+    out.tourSeen = true;
+    localStorage.setItem(STORE_KEY, JSON.stringify(out));
+  }catch(e){}
+}
+
+function pushHistory(dayStamp, kcal, protein, trained){
+  S.history = S.history.filter(function(h){ return h.d !== dayStamp; });
+  S.history.push({d:dayStamp,kcal:Math.round(kcal),protein:Math.round(protein),
+                  gc:S.goals.calories,gp:S.goals.protein,tr:!!trained});
+  var cutoff = stamp(addDays(new Date(), -400));
+  S.history = S.history.filter(function(h){ return h.d >= cutoff; })
+                       .sort(function(a,b){ return a.d < b.d ? -1 : 1; });
+}
+
+function logWeight(kg){
+  var d = stamp();
+  S.weightLog = S.weightLog.filter(function(w){ return w.d !== d; });
+  S.weightLog.push({d:d,kg:kg});
+  S.weightLog.sort(function(a,b){ return a.d < b.d ? -1 : 1; });
+}
+
+/* ------------------------------------------------------------ computed */
+
+function totals(){
+  var t = {calories:0,protein:0,carbs:0,fat:0,fibre:0};
+  S.meals.forEach(function(m){ KEYS.forEach(function(k){ t[k] += num(m[k]); }); });
+  return t;
+}
+function burn(sport,minutes,effort){
+  var met = (SPORTS[sport]||SPORTS.gym).met;
+  var f = (EFFORT[effort]||EFFORT.moderate).f;
+  return Math.round(met * S.weight * num(minutes) / 60 * f);
+}
+function weekStamps(){
+  var mon = mondayOf(new Date()), out = [];
+  for(var i=0;i<7;i++) out.push(stamp(addDays(mon,i)));
+  return out;
+}
+function sessionsThisWeek(){
+  var w = weekStamps();
+  return S.sessions.filter(function(s){ return w.indexOf(s.date) !== -1; });
+}
+function sessionsOn(dayStamp){
+  return S.sessions.filter(function(s){ return s.date === dayStamp; });
+}
+function weekBurn(){ return sessionsThisWeek().reduce(function(n,s){ return n + burn(s.sport,s.minutes,s.effort); },0); }
+function plannedMinutes(){ return S.plan.reduce(function(n,p){ return n + p.sessions * p.minutes; },0); }
+function doneMinutes(){ return sessionsThisWeek().reduce(function(n,s){ return n + num(s.minutes); },0); }
+function plannedBurn(){ return S.plan.reduce(function(n,p){ return n + p.sessions * burn(p.sport,p.minutes,'moderate'); },0); }
+function maintenanceKcal(){ return Math.round(S.weight * 29 + plannedBurn() / 7); }
+function phaseTarget(){ return Math.round(maintenanceKcal() * (1 + PHASES[S.phase].adj) / 10) * 10; }
+
+/* last 28 days, from real logged history + today live */
+function monthData(){
+  var t = totals(), today = stamp(), trainedToday = sessionsOn(today).length > 0;
+  var map = {};
+  S.history.forEach(function(h){ map[h.d] = h; });
+  map[today] = {d:today,kcal:t.calories,protein:t.protein,gc:S.goals.calories,gp:S.goals.protein,tr:trainedToday,live:true};
+  var out = [];
+  for(var i=27;i>=0;i--){
+    var ds = stamp(addDays(new Date(), -i)), h = map[ds];
+    if(!h || (!h.kcal && !h.tr)){
+      out.push({d:ds,day:fromStamp(ds).getDate(),logged:false,onTarget:false,trained:h?h.tr:false,kcal:0,kcalPct:0});
+    }else{
+      var pct = h.gc ? h.kcal / h.gc : 0;
+      out.push({d:ds,day:fromStamp(ds).getDate(),logged:true,kcal:h.kcal,kcalPct:pct,
+                proteinHit:h.protein >= h.gp,trained:h.tr,
+                onTarget:pct >= 0.9 && pct <= 1.1 && h.protein >= h.gp});
+    }
+  }
+  return out;
+}
+
+/* ------------------------------------------------------------- actions */
+
+function setGoal(k,raw){ S.goals[k] = Math.max(0, Math.round(num(raw))); }
+function addFood(f){
+  var now = new Date();
+  var meal = {id:Date.now()+Math.random(),name:f.name,
+    time:now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')};
+  KEYS.forEach(function(k){ meal[k] = f[k]; });
+  S.meals.push(meal); S.query = '';
+}
+function addMeal(){
+  var d = S.draft;
+  if(!KEYS.some(function(k){ return num(d[k]) > 0; })) return;
+  var now = new Date();
+  var meal = {id:Date.now()+Math.random(),name:(d.name||'').trim() || 'Quick entry',
+    time:now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')};
+  KEYS.forEach(function(k){ meal[k] = Math.max(0, Math.round(num(d[k]))); });
+  S.meals.push(meal);
+  S.draft = {name:'',calories:'',protein:'',carbs:'',fat:'',fibre:''};
+  S.customOpen = false;
+}
+function addSession(){
+  var d = S.sessionDraft;
+  if(!(num(d.minutes) > 0)) return;
+  S.sessions.push({id:Date.now(),sport:d.sport,minutes:Math.round(num(d.minutes)),
+                   effort:d.effort,date:stamp()});
+}
+function addPlan(){
+  var d = S.planDraft;
+  if(!(num(d.sessions) > 0 && num(d.minutes) > 0)) return;
+  S.plan.push({id:Date.now(),sport:d.sport,sessions:Math.round(num(d.sessions)),
+               minutes:Math.round(num(d.minutes))});
+}
+function balance(){
+  var cal = S.goals.calories || 2400, w = S.weight, ph = PHASES[S.phase];
+  var protein = Math.round(w * ph.protein), fat = Math.round(cal * 0.27 / 9);
+  S.goals = {calories:cal,protein:protein,fat:fat,
+             carbs:Math.max(0, Math.round((cal - protein*4 - fat*9)/4)),
+             fibre:Math.round(cal/1000*14)};
+}
+function applyPhase(){
+  var target = phaseTarget(), w = S.weight, ph = PHASES[S.phase];
+  var protein = Math.round(w * ph.protein), fat = Math.round(target * 0.27 / 9);
+  S.goals = {calories:target,protein:protein,fat:fat,
+             carbs:Math.max(0, Math.round((target - protein*4 - fat*9)/4)),
+             fibre:Math.round(target/1000*14)};
+}
+function resetAll(){
+  if(!confirm('Clear your goals, weight, plan and logged history on this device? This cannot be undone.')) return;
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  location.reload();
+}
+
+/* -------------------------------------------------------------- checks */
+
+function card(kind,title,text){ return {kind:kind,title:title,text:text}; }
+
+function nutritionChecks(){
+  var g = S.goals, out = [];
+  var male = S.profile === 'male';
+  var floor = male ? 1500 : 1200, cal = g.calories || 0;
+  if(cal < floor) out.push(card('stop','Calorie goal is too low', cal+' kcal is under the '+floor+' kcal a day generally advised for '+(male?'men':'women')+'. Below that counts as a very-low-calorie diet and needs medical supervision.'));
+  else if(cal < floor + 300) out.push(card('care','Low end of the range','This sits at the bottom of the usual '+floor+'\u2013'+(male?1800:1500)+' kcal weight-loss range \u2014 workable short term, not for months.'));
+  if(cal > 4200) out.push(card('care','Calorie goal is very high', cal+' kcal only fits a large or heavily training body. Sanity-check it against your sessions.'));
+  var pct = function(k){ return cal ? Math.round((g[k] * (k==='fat'?9:4)) / cal * 100) : 0; };
+  var p = pct('protein'), c = pct('carbs'), f = pct('fat');
+  if(p < 10) out.push(card('care','Protein is low','Only '+p+'% of your energy \u2014 guidance puts protein at 10\u201335%. At least '+Math.round(cal*0.1/4)+' g.'));
+  if(p > 35) out.push(card('care','Protein is high', p+'% of energy is above the 10\u201335% range. Even lifters rarely need past '+Math.round(S.weight*2.2)+' g.'));
+  if(c < 45) out.push(card('care','Carbs are low', c+'% of energy versus 45\u201365%. Low carb can be deliberate, but hard sessions will feel flat.'));
+  if(c > 65) out.push(card('care','Carbs are high', c+'% of energy is above the 45\u201365% range \u2014 likely crowding out protein and fat.'));
+  if(f < 20) out.push(card('care','Fat is low', f+'% of energy, below 20\u201335%. Some fat is needed for vitamins A, D, E and K and for hormones.'));
+  if(f > 35) out.push(card('care','Fat is high', f+'% of energy, above the 20\u201335% range.'));
+  var fibreRec = Math.round(cal/1000*14);
+  if(g.fibre < fibreRec * 0.6) out.push(card('care','Fibre is low','About '+fibreRec+' g suits '+cal+' kcal (roughly 14 g per 1,000 kcal). You have '+g.fibre+' g.'));
+  if(g.fibre > 60) out.push(card('care','Fibre is very high', g.fibre+' g a day is a lot \u2014 build up gradually and drink plenty of water.'));
+  var sum = p + c + f;
+  if(cal && (sum < 90 || sum > 110)) out.push(card('care',"Macros don't add up",'Your macro goals come to '+sum+'% of your calorie goal. Try the training split below.'));
+  if(!out.length) out.push(card('ok','These goals look sensible','Calories sit above the safe floor and every macro falls inside the accepted ranges. Nice and steady.'));
+  return out;
+}
+
+function loadChecks(){
+  var out = [], w = S.weight, g = S.goals;
+  var planned = plannedMinutes(), maint = maintenanceKcal(), target = phaseTarget();
+  var gap = g.calories - target, ph = PHASES[S.phase];
+  var hours = Math.round(planned/6)/10;
+  if(gap < -maint*0.22) out.push(card('stop','Too much training for what you eat',"You've planned "+hours+" h a week and you're eating "+g.calories+' kcal \u2014 about '+Math.abs(gap)+' kcal a day under what that load needs. Expect poor recovery and lost muscle. Add food or drop a session.'));
+  else if(gap < -maint*0.1) out.push(card('care','Firm deficit \u2014 keep it short','Roughly '+Math.abs(gap)+' kcal a day below your training needs. Fine for a 6\u201310 week cut with protein high; not a place to live.'));
+  else if(gap > maint*0.18) out.push(card('care','Surplus is large','About '+gap+' kcal a day over what this training burns \u2014 more than a lean gain needs. '+(S.phase==='bulk'?'Deliberate for a bulk; watch the waistline.':'Trim it or add a session.')));
+  else out.push(card('ok','Food matches the training','Your '+g.calories+' kcal goal is within '+Math.abs(gap)+' kcal of what '+hours+' h of training a week needs for '+ph.label.toLowerCase()+'.'));
+  if(planned < 150) out.push(card('care','Under the activity floor',"Guidance is 150\u2013300 minutes of moderate activity a week plus two strength sessions. You've planned "+planned+'.'));
+  else if(planned > 600) out.push(card('care','High weekly load', planned+' minutes is a serious block. Keep one full rest day, and eat at maintenance or above in heavy weeks.'));
+  var perKg = Math.round(g.protein/w*10)/10;
+  if(perKg < 1.6) out.push(card('care','Protein is light for lifting', perKg+' g/kg \u2014 training athletes commonly use 1.6\u20132.2 g/kg. That would be '+Math.round(w*1.6)+'\u2013'+Math.round(w*2.2)+' g for you.'));
+  else if(perKg > 2.4) out.push(card('care','Protein above the useful range', perKg+' g/kg is more than most evidence supports (1.6\u20132.2 g/kg). Spend the calories on carbs before a hard session.'));
+  var sp = S.plan.reduce(function(n,p){ return n + p.sessions; },0);
+  if(sp >= 7) out.push(card('care','No rest day in the plan', sp+' sessions a week leaves no full day off. Adaptation happens on the rest day.'));
+  return out;
+}
+
+function trendChecks(){
+  var m = monthData(), ph = PHASES[S.phase];
+  var logged = m.filter(function(d){ return d.logged; }).length;
+  var onTarget = m.filter(function(d){ return d.onTarget; }).length;
+  var trained = m.filter(function(d){ return d.trained; }).length;
+  var out = [];
+  if(logged < 5){
+    out.push(card('care','Not enough logged yet','You have '+logged+' logged day'+(logged===1?'':'s')+' in the last 28. Streaks and averages start to mean something from about two weeks in.'));
+    return out;
+  }
+  out.push(card(onTarget >= 18 ? 'ok':'care', onTarget >= 18 ? 'Consistency is the win':'Consistency is the gap',
+    onTarget+' of your '+logged+' logged days landed inside your calorie window with protein hit. '+(onTarget>=18?'That is enough signal to trust the weight trend.':'Below about 18 days the weight line tells you very little \u2014 tighten the easy days first.')));
+  var expected = Math.round(ph.slope*4*10)/10;
+  out.push(card('ok', ph.label+' expectation',
+    (ph.slope===0 ? 'Weight should sit flat within \u00B10.5 kg of noise.' : 'At this phase expect about '+(expected>0?'+':'')+expected+' kg over four weeks.')+' You trained on '+trained+' days.'));
+  return out;
+}
+
+function insightHTML(c){
+  var mark = c.kind === 'ok' ? '\u2713' : '!';
+  var bg = c.kind === 'stop' ? 'var(--color-accent-200)' : c.kind === 'care' ? 'var(--color-neutral-200)' : 'var(--color-accent-2-200)';
+  var border = c.kind === 'stop' ? 'var(--color-accent-400)' : 'transparent';
+  var fg = c.kind === 'stop' ? 'var(--color-accent-800)' : c.kind === 'ok' ? 'var(--color-accent-2-800)' : 'var(--color-neutral-800)';
+  return '<div class="insight" style="background:'+bg+';border-color:'+border+'">'+
+    '<span style="flex:none;font:700 13px/1.35 var(--font-body);color:'+fg+'">'+mark+'</span>'+
+    '<div class="col" style="gap:3px">'+
+      '<span style="font:700 12.5px/1.2 var(--font-body);color:'+fg+'">'+esc(c.title)+'</span>'+
+      '<span style="font:500 12px/1.5 var(--font-body);color:var(--color-neutral-800)">'+esc(c.text)+'</span>'+
+    '</div></div>';
+}
+
+/* ---------------------------------------------------------------- views */
+
+function todayView(){
+  var g = S.goals, t = totals();
+  var done = function(k){ return t[k] >= g[k] && g[k] > 0; };
+  var calPct = g.calories ? t.calories / g.calories : 0;
+  var calLeft = Math.max(0, g.calories - t.calories);
+  var todayBurn = sessionsOn(stamp()).reduce(function(n,s){ return n + burn(s.sport,s.minutes,s.effort); },0);
+  var macroKeys = ['protein','carbs','fat','fibre'];
+  var doneCount = macroKeys.filter(done).length;
+  var allDone = done('calories') && doneCount === 4;
+
+  var cheerText, cheerMark = '\u2192', cheerBg = 'var(--color-accent-2-200)', cheerFg = 'var(--color-accent-2-800)';
+  if(allDone){ cheerText = 'Well done \u2014 no more for today. Keep it up.'; cheerMark = '\u2713'; }
+  else if(calPct >= 1.15){ cheerText = 'A bit past the mark today. Tomorrow is a clean page \u2014 nothing to fix tonight.'; cheerMark = '!'; cheerBg = 'var(--color-accent-200)'; cheerFg = 'var(--color-accent-800)'; }
+  else if(calPct >= 1){ cheerText = 'Calories done for today. Nothing more needed \u2014 keep it up.'; cheerMark = '\u2713'; }
+  else if(calPct >= 0.8){ cheerText = 'Nearly there \u2014 '+calLeft+' kcal left and '+(4-doneCount)+' macro'+(4-doneCount===1?'':'s')+' to round off.'; }
+  else if(todayBurn > 300 && calPct < 0.6){ cheerText = 'You burned '+todayBurn+' kcal training and are only at '+Math.round(calPct*100)+'% of your food. Refuel \u2014 that is where the session pays off.'; cheerMark = '!'; cheerBg = 'var(--color-accent-200)'; cheerFg = 'var(--color-accent-800)'; }
+  else if(calPct >= 0.4){ cheerText = 'Halfway and steady. '+calLeft+' kcal left \u2014 protein first, it fills the gaps.'; }
+  else { cheerText = 'Good start. Log as you go and the day takes care of itself.'; }
+
+  var h = '';
+
+  /* ring */
+  h += '<div class="card elev-sm" style="padding:22px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;background:var(--color-neutral-100)">';
+  h += '<div style="position:relative;width:196px;height:196px;display:flex;align-items:center;justify-content:center">';
+  h += '<svg width="196" height="196" viewBox="0 0 196 196" style="position:absolute;inset:0" aria-hidden="true">'+
+       '<circle cx="98" cy="98" r="82" fill="none" stroke="var(--color-neutral-300)" stroke-width="17"></circle>'+
+       '<circle cx="98" cy="98" r="82" fill="none" stroke="'+(calPct>=1?'var(--color-accent-2-500)':'var(--color-accent-500)')+'" stroke-width="17" stroke-linecap="round" stroke-dasharray="'+(Math.min(1,calPct)*RING_C)+' '+RING_C+'" transform="rotate(-90 98 98)" style="transition:stroke-dasharray .55s cubic-bezier(.4,0,.2,1)"></circle></svg>';
+  h += '<div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:1px">'+
+       '<span style="font-family:var(--font-heading);font-size:44px;line-height:1;color:var(--color-accent-800)">'+(done('calories')?'Done':calLeft)+'</span>'+
+       '<span style="font:600 11.5px/1.2 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">'+(done('calories')?'for today':'kcal left')+'</span>'+
+       '<span style="font:600 12.5px/1.2 var(--font-body);color:var(--color-neutral-700);margin-top:6px">'+t.calories+' of '+g.calories+' kcal</span>'+
+       '</div></div>';
+  h += '<div style="align-self:stretch;display:flex;justify-content:space-between;gap:10px;font:600 11.5px/1 var(--font-body);color:var(--color-neutral-700)">'+
+       '<span>Burned in training '+todayBurn+' kcal</span><span>Net '+(t.calories-todayBurn)+' kcal</span></div>';
+  h += '<div style="align-self:stretch;border-radius:var(--radius-lg);padding:13px 16px;background:'+cheerBg+';display:flex;gap:10px;align-items:flex-start">'+
+       '<span style="font:700 14px/1.3 var(--font-body);flex:none;color:'+cheerFg+'">'+cheerMark+'</span>'+
+       '<span style="font:600 13.5px/1.45 var(--font-body);color:'+cheerFg+'">'+esc(cheerText)+'</span></div></div>';
+
+  /* macros */
+  h += '<div class="card" style="padding:18px 20px;display:flex;flex-direction:column;gap:16px;background:var(--color-surface)">'+
+       '<div style="display:flex;align-items:baseline;justify-content:space-between">'+
+       '<h2 style="font-size:17px">Macros</h2>'+
+       '<span style="font:600 11.5px/1 var(--font-body);color:var(--color-neutral-700)">'+doneCount+' of 4 met</span></div>';
+  macroKeys.forEach(function(k){
+    var pct = g[k] ? t[k]/g[k] : 0, over = t[k] - g[k];
+    var note = Math.max(0, g[k]-t[k])+' '+META[k].unit+' to go', nc = 'var(--color-neutral-600)';
+    if(pct >= 1.2){ note = 'Over by '+over+' '+META[k].unit+' \u2014 ease off tomorrow'; nc = 'var(--color-accent-700)'; }
+    else if(pct >= 1){ note = 'Goal met \u2014 nothing more needed today'; nc = 'var(--color-accent-2-700)'; }
+    h += '<div class="col" style="gap:6px">'+
+      '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">'+
+      '<span style="font:700 13.5px/1 var(--font-body)">'+META[k].label+'</span>'+
+      '<span style="font:600 13px/1 var(--font-body);color:var(--color-neutral-700)">'+t[k]+' / '+g[k]+' '+META[k].unit+'</span></div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+Math.min(100,Math.round(pct*100))+'%;background:'+META[k].color+'"></div></div>'+
+      '<span style="font:600 11.5px/1.3 var(--font-body);color:'+nc+'">'+esc(note)+'</span></div>';
+  });
+  h += '</div>';
+
+  /* add a meal */
+  var q = S.query.trim().toLowerCase();
+  var shown = q ? FOODS.filter(function(f){ return f.name.toLowerCase().indexOf(q) !== -1; }).slice(0,8)
+                : FOODS.filter(function(f){ return f.cat === S.foodCat; });
+  h += '<div class="card elev-sm" style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px;background:var(--color-neutral-100)">'+
+       '<h2 style="font-size:17px">Add a meal</h2>'+
+       '<input class="input" type="search" placeholder="What did you eat?" value="'+esc(S.query)+'" data-fk="query" data-in="query">';
+  h += '<div class="scroll-x">';
+  FOOD_CATS.forEach(function(c){
+    var on = !q && c.key === S.foodCat;
+    h += '<button type="button" data-act="cat" data-v="'+c.key+'" style="flex:none;cursor:pointer;padding:7px 14px;border-radius:999px;border:1px solid '+(on?'var(--color-accent-500)':'var(--color-divider)')+';background:'+(on?'var(--color-accent-500)':'transparent')+';color:'+(on?'#fff':'var(--color-neutral-700)')+';font:700 12px/1 var(--font-body)">'+c.label+'</button>';
+  });
+  h += '</div><div class="col" style="gap:7px">';
+  shown.forEach(function(f){
+    var i = FOODS.indexOf(f);
+    h += '<button type="button" data-act="addfood" data-v="'+i+'" style="display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;padding:11px 12px 11px 16px;border-radius:999px;border:1px solid var(--color-divider);background:var(--color-bg)">'+
+      '<span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">'+
+      '<span style="font:700 13.5px/1.2 var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(f.name)+'</span>'+
+      '<span style="font:500 11.5px/1 var(--font-body);color:var(--color-neutral-600)">'+esc(f.serving)+' \u00B7 P'+f.protein+' C'+f.carbs+' F'+f.fat+' \u00B7 fibre '+f.fibre+'g</span></span>'+
+      '<span style="font:700 13px/1 var(--font-body);color:var(--color-accent-700)">'+f.calories+' kcal</span>'+
+      '<span aria-hidden="true" style="flex:none;width:26px;height:26px;border-radius:999px;background:var(--color-accent-500);color:#fff;font:700 15px/26px var(--font-body);text-align:center">+</span></button>';
+  });
+  if(q && !shown.length) h += '<span class="note" style="padding:4px 2px">Nothing preloaded matches \u201C'+esc(S.query)+'\u201D \u2014 add it as your own item below.</span>';
+  h += '</div></div>';
+
+  /* custom item */
+  h += '<div class="card elev-sm" style="padding:16px 20px 18px;display:flex;flex-direction:column;gap:14px;background:var(--color-surface)">'+
+    '<button type="button" data-act="togglecustom" aria-expanded="'+(S.customOpen?'true':'false')+'" style="display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;border:0;background:transparent;padding:0;width:100%">'+
+    '<span style="display:flex;flex-direction:column;gap:2px;text-align:left">'+
+    '<span style="font-family:var(--font-heading);font-size:16px">Add an item</span>'+
+    '<span style="font:500 11.5px/1.3 var(--font-body);color:var(--color-neutral-600)">Not in the list? Enter its macros once.</span></span>'+
+    '<span aria-hidden="true" style="flex:none;width:30px;height:30px;border-radius:999px;background:var(--color-accent-2-200);color:var(--color-accent-2-900);font:700 16px/30px var(--font-body);text-align:center">'+(S.customOpen?'\u2013':'+')+'</span></button>';
+  if(S.customOpen){
+    h += '<div class="col" style="gap:14px">'+
+      '<input class="input" type="text" placeholder="Item name \u2014 e.g. Nan\u2019s lasagne" value="'+esc(S.draft.name)+'" data-fk="dname" data-in="draft.name">'+
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">';
+    KEYS.forEach(function(k){
+      h += '<label class="col" style="gap:5px"><span class="field-label">'+META[k].short+'</span>'+
+        '<input class="input" type="number" inputmode="numeric" placeholder="0" value="'+esc(S.draft[k])+'" data-fk="d'+k+'" data-in="draft.'+k+'" style="min-height:40px;text-align:center;padding:8px 6px"></label>';
+    });
+    h += '</div><button type="button" class="btn btn-primary btn-block" data-act="addmeal" style="min-height:46px;font-size:15px">Add to today</button></div>';
+  }
+  h += '</div>';
+
+  /* logged today */
+  h += '<div class="col" style="gap:10px"><span class="eyebrow">Logged today</span>';
+  if(!S.meals.length){
+    h += '<div class="empty">Nothing logged yet. Pick something above, or add your own item.</div>';
+  }else{
+    S.meals.slice().reverse().forEach(function(m){
+      h += '<div class="pill-row"><div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">'+
+        '<span style="font:700 13.5px/1.2 var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(m.name)+'</span>'+
+        '<span style="font:500 11.5px/1 var(--font-body);color:var(--color-neutral-600)">'+esc(m.time)+' \u00B7 '+m.protein+'p / '+m.carbs+'c / '+m.fat+'f / '+m.fibre+' fibre</span></div>'+
+        '<span style="font:700 13px/1 var(--font-body);color:var(--color-accent-700)">'+m.calories+' kcal</span>'+
+        '<button type="button" class="icon-btn" data-act="delmeal" data-v="'+m.id+'" aria-label="Remove '+esc(m.name)+'">\u00D7</button></div>';
+    });
+  }
+  h += '</div>';
+  return h;
+}
+
+function activityView(){
+  var mon = mondayOf(new Date());
+  var week = sessionsThisWeek();
+  var sd = S.sessionDraft, pd = S.planDraft;
+  var h = '';
+
+  h += '<div class="card elev-sm" style="padding:20px;display:flex;flex-direction:column;gap:16px;background:var(--color-neutral-100)">'+
+    '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">'+
+    '<div class="col" style="gap:2px"><h2 style="font-size:18px">This week</h2>'+
+    '<span style="font:500 12px/1.3 var(--font-body);color:var(--color-neutral-700)">'+esc(fmtShort(mon))+' \u2013 '+esc(fmtShort(addDays(mon,6)))+'</span></div>'+
+    '<div style="text-align:right" class="col"><span style="font-family:var(--font-heading);font-size:26px;line-height:1;color:var(--color-accent-800)">'+doneMinutes()+'</span>'+
+    '<span class="field-label">of '+plannedMinutes()+' min</span></div></div>';
+
+  if(!S.plan.length){
+    h += '<div class="empty">No sports planned yet. Add one below and the week fills in from there.</div>';
+  }
+  S.plan.forEach(function(p,i){
+    var mine = week.filter(function(s){ return s.sport === p.sport; });
+    var doneN = mine.length, mins = mine.reduce(function(n,s){ return n + s.minutes; },0);
+    var pct = p.sessions ? doneN/p.sessions : 0;
+    var note = (p.sessions-doneN)+' to go \u00B7 '+mins+' of '+(p.sessions*p.minutes)+' min', nc = 'var(--color-neutral-600)';
+    if(pct >= 1){ note = 'Week complete \u2014 well done, rest counts too'; nc = 'var(--color-accent-2-700)'; }
+    h += '<div class="col" style="gap:6px">'+
+      '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">'+
+      '<span style="font:700 13.5px/1 var(--font-body)">'+esc(SPORTS[p.sport].label)+' \u00B7 '+p.sessions+' \u00D7 '+p.minutes+' min</span>'+
+      '<span style="font:600 12.5px/1 var(--font-body);color:var(--color-neutral-700)">'+doneN+' / '+p.sessions+'</span></div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+Math.min(100,Math.round(pct*100))+'%;background:'+SPORT_COLORS[i%SPORT_COLORS.length]+'"></div></div>'+
+      '<span style="font:600 11.5px/1.3 var(--font-body);color:'+nc+'">'+esc(note)+'</span></div>';
+  });
+  h += '<div style="display:flex;gap:10px">'+
+    '<div style="flex:1;border-radius:var(--radius-lg);padding:12px 14px;background:var(--color-accent-2-200)" class="col">'+
+    '<span style="font:700 17px/1 var(--font-body);color:var(--color-accent-2-800)">'+weekBurn()+' kcal</span>'+
+    '<span style="font:600 10.5px/1.2 var(--font-body);color:var(--color-accent-2-800);margin-top:2px">burned this week</span></div>'+
+    '<div style="flex:1;border-radius:var(--radius-lg);padding:12px 14px;background:var(--color-accent-200)" class="col">'+
+    '<span style="font:700 17px/1 var(--font-body);color:var(--color-accent-800)">'+week.length+' of '+S.plan.reduce(function(n,p){return n+p.sessions;},0)+'</span>'+
+    '<span style="font:600 10.5px/1.2 var(--font-body);color:var(--color-accent-800);margin-top:2px">sessions done</span></div></div></div>';
+
+  /* log a session */
+  var opts = Object.keys(SPORTS).map(function(k){
+    return '<option value="'+k+'"'+(k===sd.sport?' selected':'')+'>'+esc(SPORTS[k].label)+'</option>'; }).join('');
+  h += '<div class="card" style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px;background:var(--color-surface)">'+
+    '<h2 style="font-size:17px">Log a session</h2>'+
+    '<label class="col" style="gap:5px"><span class="field-label">Sport</span>'+
+    '<select class="input" data-in="sessionDraft.sport" data-fk="ssport" style="min-height:42px">'+opts+'</select></label>'+
+    '<div style="display:flex;gap:10px">'+
+    '<label class="col" style="flex:none;width:110px;gap:5px"><span class="field-label">Minutes</span>'+
+    '<input class="input" type="number" inputmode="numeric" value="'+esc(sd.minutes)+'" data-in="sessionDraft.minutes" data-fk="smin" style="min-height:42px;text-align:center"></label>'+
+    '<div class="col" style="flex:1;gap:5px"><span class="field-label">Effort</span>'+
+    '<div style="display:flex;border:1px solid var(--color-divider);border-radius:999px;overflow:hidden;height:42px">';
+  Object.keys(EFFORT).forEach(function(k){
+    var on = sd.effort === k;
+    h += '<button type="button" data-act="effort" data-v="'+k+'" style="flex:1;border:0;cursor:pointer;font:600 12.5px/1 var(--font-body);background:'+(on?'var(--color-accent-500)':'transparent')+';color:'+(on?'#fff':'var(--color-text)')+'">'+EFFORT[k].label+'</button>';
+  });
+  h += '</div></div></div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 16px;border-radius:999px;background:var(--color-neutral-200)">'+
+    '<span style="font:600 12px/1.2 var(--font-body);color:var(--color-neutral-700)">Estimated burn</span>'+
+    '<span style="font:700 14px/1 var(--font-body);color:var(--color-accent-700)">'+burn(sd.sport,sd.minutes,sd.effort)+' kcal</span></div>'+
+    '<button type="button" class="btn btn-primary btn-block" data-act="addsession" style="min-height:46px;font-size:15px">Add session</button></div>';
+
+  /* insights */
+  h += '<div class="col" style="gap:10px"><span class="eyebrow">Training load &amp; fuel</span>'+
+       loadChecks().map(insightHTML).join('')+'</div>';
+
+  /* weekly goals */
+  var popts = Object.keys(SPORTS).map(function(k){
+    return '<option value="'+k+'"'+(k===pd.sport?' selected':'')+'>'+esc(SPORTS[k].label)+'</option>'; }).join('');
+  h += '<div class="card elev-sm" style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px;background:var(--color-neutral-100)">'+
+    '<div class="col" style="gap:3px"><h2 style="font-size:17px">Weekly training goals</h2>'+
+    '<span style="font:500 12px/1.4 var(--font-body);color:var(--color-neutral-700)">Sessions a week and minutes each \u2014 the fuel maths follows from these.</span></div>';
+  S.plan.forEach(function(p){
+    h += '<div style="display:flex;align-items:center;gap:8px">'+
+      '<span style="flex:1;font:700 13.5px/1.2 var(--font-body);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(SPORTS[p.sport].label)+'</span>'+
+      '<input class="input" type="number" inputmode="numeric" value="'+p.sessions+'" data-plan="'+p.id+'" data-pf="sessions" data-fk="pl'+p.id+'s" style="flex:none;width:56px;min-height:38px;text-align:center;padding:6px" aria-label="Sessions per week">'+
+      '<span style="font:600 11px/1 var(--font-body);color:var(--color-neutral-600)">\u00D7</span>'+
+      '<input class="input" type="number" inputmode="numeric" value="'+p.minutes+'" data-plan="'+p.id+'" data-pf="minutes" data-fk="pl'+p.id+'m" style="flex:none;width:62px;min-height:38px;text-align:center;padding:6px" aria-label="Minutes per session">'+
+      '<span style="font:600 11px/1 var(--font-body);color:var(--color-neutral-600)">min</span>'+
+      '<button type="button" class="icon-btn" data-act="delplan" data-v="'+p.id+'" aria-label="Remove goal">\u00D7</button></div>';
+  });
+  h += '<div style="display:flex;gap:8px;align-items:flex-end;padding-top:12px;border-top:1px solid var(--color-divider)">'+
+    '<label class="col" style="flex:1;gap:5px;min-width:0"><span class="field-label">Add sport</span>'+
+    '<select class="input" data-in="planDraft.sport" data-fk="psport" style="min-height:38px">'+popts+'</select></label>'+
+    '<input class="input" type="number" inputmode="numeric" value="'+esc(pd.sessions)+'" data-in="planDraft.sessions" data-fk="psess" style="flex:none;width:56px;min-height:38px;text-align:center;padding:6px" aria-label="Sessions per week">'+
+    '<input class="input" type="number" inputmode="numeric" value="'+esc(pd.minutes)+'" data-in="planDraft.minutes" data-fk="pmin" style="flex:none;width:62px;min-height:38px;text-align:center;padding:6px" aria-label="Minutes per session">'+
+    '<button type="button" class="btn btn-secondary" data-act="addplan" style="flex:none;min-height:38px;padding:0 14px">Add</button></div></div>';
+
+  /* sessions this week */
+  h += '<div class="col" style="gap:10px"><span class="eyebrow">Sessions this week</span>';
+  if(!week.length){
+    h += '<div class="empty">No sessions yet this week. Log one above and it counts towards your plan.</div>';
+  }else{
+    week.slice().reverse().forEach(function(s){
+      h += '<div class="pill-row"><div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">'+
+        '<span style="font:700 13.5px/1.2 var(--font-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(SPORTS[s.sport].label)+'</span>'+
+        '<span style="font:500 11.5px/1 var(--font-body);color:var(--color-neutral-600)">'+esc(fromStamp(s.date).toLocaleDateString(undefined,{weekday:'short'}))+' \u00B7 '+s.minutes+' min \u00B7 '+EFFORT[s.effort].label.toLowerCase()+'</span></div>'+
+        '<span style="font:700 13px/1 var(--font-body);color:var(--color-accent-2-700)">'+burn(s.sport,s.minutes,s.effort)+' kcal</span>'+
+        '<button type="button" class="icon-btn" data-act="delsession" data-v="'+s.id+'" aria-label="Remove session">\u00D7</button></div>';
+    });
+  }
+  h += '</div>';
+  return h;
+}
+
+function trendsView(){
+  var ph = PHASES[S.phase];
+  var month = monthData();
+  var logged = month.filter(function(d){ return d.logged; });
+  var onTargetDays = month.filter(function(d){ return d.onTarget; }).length;
+  var streak = 0;
+  for(var i = month.length-1; i >= 0 && month[i].onTarget; i--) streak++;
+  var best = 0, run = 0;
+  month.forEach(function(d){ run = d.onTarget ? run+1 : 0; best = Math.max(best, run); });
+  var avgKcal = logged.length ? Math.round(logged.reduce(function(n,d){ return n + d.kcal; },0)/logged.length) : 0;
+
+  var h = '';
+
+  /* phase picker */
+  h += '<div class="card elev-sm" style="padding:20px;display:flex;flex-direction:column;gap:14px;background:var(--color-neutral-100)">'+
+    '<div class="col" style="gap:3px"><h2 style="font-size:18px">Where you are right now</h2>'+
+    '<span style="font:500 12px/1.4 var(--font-body);color:var(--color-neutral-700)">Pick the phase you\u2019re in \u2014 targets, warnings and the trend line all follow it.</span></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  Object.keys(PHASES).forEach(function(k){
+    var on = S.phase === k, p = PHASES[k];
+    h += '<button type="button" data-act="phase" data-v="'+k+'" style="cursor:pointer;text-align:left;padding:12px 14px;border-radius:var(--radius-md);border:1px solid '+(on?'var(--color-accent-400)':'transparent')+';background:'+(on?'var(--color-accent-200)':'var(--color-surface)')+';display:flex;flex-direction:column;gap:3px">'+
+      '<span style="font:700 13px/1.1 var(--font-body);color:'+(on?'var(--color-accent-800)':'var(--color-text)')+'">'+p.label+'</span>'+
+      '<span style="font:500 10.5px/1.3 var(--font-body);color:'+(on?'var(--color-accent-800)':'var(--color-neutral-700)')+'">'+esc(p.sub)+'</span></button>';
+  });
+  h += '</div><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-radius:var(--radius-lg);background:var(--color-surface)">'+
+    '<div class="col" style="gap:2px"><span class="field-label">Suggested calories</span>'+
+    '<span style="font:700 15px/1.2 var(--font-body)">'+phaseTarget()+' kcal \u00B7 '+Math.round(S.weight*ph.protein)+' g protein</span></div>'+
+    '<button type="button" class="btn btn-primary" data-act="applyphase" style="flex:none;min-height:38px">Apply</button></div>'+
+    '<span style="font:500 11.5px/1.5 var(--font-body);color:var(--color-neutral-700)">Maintenance for you is about '+maintenanceKcal()+' kcal a day including '+Math.round(plannedBurn()/7)+' kcal of planned training. '+ph.label+' shifts that by '+(ph.adj>0?'+':'')+Math.round(ph.adj*100)+'%.</span></div>';
+
+  /* month grid */
+  h += '<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:16px;background:var(--color-surface)">'+
+    '<div style="display:flex;align-items:baseline;justify-content:space-between">'+
+    '<h2 style="font-size:17px">Last 28 days</h2>'+
+    '<span style="font:600 11.5px/1 var(--font-body);color:var(--color-neutral-700)">'+onTargetDays+' days on target</span></div>'+
+    '<div style="display:flex;gap:10px">'+
+    '<div style="flex:1;border-radius:var(--radius-lg);padding:13px 12px;background:var(--color-accent-200)" class="col">'+
+    '<span style="font-family:var(--font-heading);font-size:23px;line-height:1;color:var(--color-accent-800)">'+streak+'d</span>'+
+    '<span style="font:600 10px/1.2 var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--color-accent-800);margin-top:2px">Current streak</span></div>'+
+    '<div style="flex:1;border-radius:var(--radius-lg);padding:13px 12px;background:var(--color-accent-2-200)" class="col">'+
+    '<span style="font-family:var(--font-heading);font-size:23px;line-height:1;color:var(--color-accent-2-800)">'+best+'d</span>'+
+    '<span style="font:600 10px/1.2 var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--color-accent-2-800);margin-top:2px">Best in 28 days</span></div>'+
+    '<div style="flex:1;border-radius:var(--radius-lg);padding:13px 12px;background:var(--color-neutral-200)" class="col">'+
+    '<span style="font-family:var(--font-heading);font-size:23px;line-height:1;color:var(--color-neutral-800)">'+month.filter(function(d){return d.trained;}).length+'</span>'+
+    '<span style="font:600 10px/1.2 var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-800);margin-top:2px">Training days</span></div></div>'+
+    '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">';
+  month.forEach(function(d){
+    var bg = !d.logged ? 'var(--color-neutral-100)' : d.onTarget ? 'var(--color-accent-2-400)' : d.kcalPct > 1.1 ? 'var(--color-accent-300)' : 'var(--color-neutral-200)';
+    var fg = d.onTarget ? 'var(--color-accent-2-900)' : 'var(--color-neutral-700)';
+    var title = 'Day '+d.day+(d.logged ? ' \u00B7 '+d.kcal+' kcal'+(d.proteinHit?' \u00B7 protein hit':'')+(d.trained?' \u00B7 trained':'') : ' \u00B7 nothing logged');
+    h += '<div title="'+esc(title)+'" style="aspect-ratio:1;border-radius:12px;background:'+bg+';display:flex;align-items:center;justify-content:center;font:600 9.5px/1 var(--font-body);color:'+fg+'">'+d.day+'</div>';
+  });
+  h += '</div><div style="display:flex;flex-wrap:wrap;gap:12px">'+
+    legend('On target','var(--color-accent-2-400)')+legend('Over','var(--color-accent-300)')+
+    legend('Under','var(--color-neutral-200)')+legend('Not logged','var(--color-neutral-100)')+'</div></div>';
+
+  /* weight */
+  h += '<div class="card elev-sm" style="padding:20px;display:flex;flex-direction:column;gap:16px;background:var(--color-neutral-100)">'+
+    '<h2 style="font-size:17px">Weight &amp; averages</h2>';
+  var wl = S.weightLog.slice(-8);
+  if(wl.length < 2){
+    h += '<div class="empty">Your weight line starts once you\u2019ve saved a weight on two different days. Update it in Goals.</div>';
+  }else{
+    var vals = wl.map(function(w){ return w.kg; });
+    var wMin = Math.min.apply(null, vals), wMax = Math.max.apply(null, vals);
+    var span = Math.max(1.2, wMax - wMin);
+    var step = wl.length > 1 ? 304/(wl.length-1) : 0;
+    var pts = wl.map(function(w,i){ return {x:8+i*step, y:86-((w.kg-wMin)/span)*74}; });
+    h += '<svg viewBox="0 0 320 96" style="width:100%;height:96px;display:block;overflow:visible" aria-label="Weight trend">'+
+      '<polyline points="'+pts.map(function(p){return p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' ')+'" fill="none" stroke="var(--color-accent-500)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>'+
+      pts.map(function(p){ return '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="4" fill="var(--color-neutral-100)" stroke="var(--color-accent-600)" stroke-width="2.5"></circle>'; }).join('')+'</svg>';
+    var chg = Math.round((vals[vals.length-1]-vals[0])*10)/10;
+    h += '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;font:600 11.5px/1 var(--font-body);color:var(--color-neutral-700)">'+
+      '<span>'+vals[0]+' kg \u00B7 '+esc(fromStamp(wl[0].d).toLocaleDateString(undefined,{day:'numeric',month:'short'}))+'</span>'+
+      '<span style="font:700 13px/1 var(--font-body);color:var(--color-accent-700)">'+(chg>0?'+':'')+chg+' kg</span>'+
+      '<span>'+vals[vals.length-1]+' kg now</span></div>';
+  }
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+    stat(avgKcal ? avgKcal+' kcal' : '\u2014','Average logged day')+
+    stat(logged.length ? Math.round(logged.filter(function(d){return d.proteinHit;}).length/logged.length*100)+'%' : '\u2014','Protein goal hit')+
+    stat(plannedMinutes()+' min','Planned per week')+
+    stat(plannedBurn()+' kcal','Training burn/week')+'</div></div>';
+
+  h += trendChecks().map(insightHTML).join('');
+  return h;
+}
+
+function legend(label,bg){
+  return '<span style="display:inline-flex;align-items:center;gap:6px;font:500 11px/1 var(--font-body);color:var(--color-neutral-700)">'+
+    '<span style="width:11px;height:11px;border-radius:999px;background:'+bg+'"></span>'+label+'</span>';
+}
+function stat(value,label){
+  return '<div style="border-radius:var(--radius-lg);padding:13px 14px;background:var(--color-surface)" class="col">'+
+    '<span style="font:700 16px/1.1 var(--font-body)">'+esc(value)+'</span>'+
+    '<span style="font:600 10.5px/1.2 var(--font-body);color:var(--color-neutral-700);margin-top:2px">'+esc(label)+'</span></div>';
+}
+
+function goalsView(){
+  var g = S.goals, ph = PHASES[S.phase];
+  var h = '';
+  h += '<div class="card elev-sm" style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:16px;background:var(--color-neutral-100)">'+
+    '<div class="col" style="gap:4px"><h2 style="font-size:19px">Your daily goals</h2>'+
+    '<span style="font:500 12.5px/1.45 var(--font-body);color:var(--color-neutral-700)">Set what a good day looks like. We\u2019ll flag anything that drifts outside general nutrition guidance.</span></div>';
+
+  h += '<div style="display:flex;align-items:center;gap:14px">'+
+    '<div style="flex:1" class="col"><span style="font:700 14px/1.2 var(--font-body)">Body weight</span>'+
+    '<span style="font:500 11.5px/1.3 var(--font-body);color:var(--color-neutral-600);margin-top:2px">Used for protein and burn maths</span></div>'+
+    '<div style="flex:none;display:flex;align-items:center;gap:6px">'+
+    '<input class="input" type="number" inputmode="decimal" value="'+esc(S.weight)+'" data-in="weight" data-fk="w" style="width:92px;min-height:42px;text-align:center;padding:8px">'+
+    '<span style="font:600 11.5px/1 var(--font-body);color:var(--color-neutral-600);width:26px">kg</span></div></div>';
+
+  h += '<div style="display:flex;align-items:center;gap:14px">'+
+    '<div style="flex:1" class="col"><span style="font:700 14px/1.2 var(--font-body)">Calorie floor</span>'+
+    '<span style="font:500 11.5px/1.3 var(--font-body);color:var(--color-neutral-600);margin-top:2px">Which public-health minimum to check against</span></div>'+
+    '<div style="display:flex;border:1px solid var(--color-divider);border-radius:999px;overflow:hidden;height:38px">'+
+    ['female','male'].map(function(k){
+      var on = S.profile === k;
+      return '<button type="button" data-act="profile" data-v="'+k+'" style="border:0;cursor:pointer;padding:0 16px;font:600 12.5px/1 var(--font-body);background:'+(on?'var(--color-accent-500)':'transparent')+';color:'+(on?'#fff':'var(--color-text)')+'">'+(k==='female'?'Women':'Men')+'</button>';
+    }).join('')+'</div></div>';
+
+  KEYS.forEach(function(k){
+    var hint = k === 'calories' ? 'Suggested '+phaseTarget()+' for '+ph.label.toLowerCase()
+      : k === 'protein' ? Math.round(g.protein/S.weight*10)/10+' g/kg \u2014 lifters use 1.6\u20132.2'
+      : k === 'fibre' ? 'About 14 g per 1,000 kcal'
+      : Math.round((g[k]*(k==='fat'?9:4))/(g.calories||1)*100)+'% of your calories';
+    h += '<div style="display:flex;align-items:center;gap:14px">'+
+      '<div style="flex:1;min-width:0" class="col"><span style="font:700 14px/1.2 var(--font-body)">'+META[k].label+'</span>'+
+      '<span style="font:500 11.5px/1.3 var(--font-body);color:var(--color-neutral-600);margin-top:2px">'+esc(hint)+'</span></div>'+
+      '<div style="flex:none;display:flex;align-items:center;gap:6px">'+
+      '<input class="input" type="number" inputmode="numeric" value="'+g[k]+'" data-goal="'+k+'" data-fk="g'+k+'" style="width:92px;min-height:42px;text-align:center;padding:8px">'+
+      '<span style="font:600 11.5px/1 var(--font-body);color:var(--color-neutral-600);width:26px">'+META[k].unit+'</span></div></div>';
+  });
+  h += '<button type="button" class="btn btn-secondary btn-block" data-act="balance" style="min-height:42px">Use a training split for '+g.calories+' kcal</button></div>';
+
+  h += '<div class="col" style="gap:10px"><span class="eyebrow">Safety check</span>'+
+    nutritionChecks().map(insightHTML).join('')+
+    '<p style="margin:6px 0 0;font:500 11px/1.55 var(--font-body);color:var(--color-neutral-600)">Based on general public-health guidance: adults are usually advised not to go below about 1,200 kcal a day (women) or 1,500 kcal (men) without medical supervision; accepted macronutrient ranges are 10\u201335% of energy from protein, 45\u201365% from carbohydrate and 20\u201335% from fat; fibre around 14 g per 1,000 kcal; 150\u2013300 minutes of moderate activity a week plus two strength sessions. Training athletes commonly use 1.6\u20132.2 g of protein per kg. Not medical advice \u2014 talk to a doctor or dietitian about your own numbers.</p></div>';
+
+  h += '<div class="col" style="gap:10px;padding:16px 18px;border-radius:var(--radius-lg);background:var(--color-neutral-100);border:1px solid var(--color-divider)">'+
+    '<span style="font:700 13px/1.2 var(--font-body)">Saved on this device</span>'+
+    '<span style="font:500 12px/1.5 var(--font-body);color:var(--color-neutral-700)">Your goals, weight, phase, plan, sessions and day-by-day history stay in this browser \u2014 close the app and they\u2019ll be here next time. Today\u2019s meals roll over into history at midnight. Nothing is sent anywhere.</span>'+
+    '<button type="button" class="btn btn-ghost" data-act="reset" style="align-self:flex-start;min-height:38px">Clear saved data</button></div>';
+  return h;
+}
+
+/* ----------------------------------------------------------- tour view */
+
+function renderTour(){
+  var el = document.getElementById('tour');
+  if(!S.tourOpen){ el.className = 'tour-hidden'; el.innerHTML = ''; return; }
+  el.className = '';
+  var step = TOUR[Math.min(S.tourStep, TOUR.length-1)];
+  var h = '<div class="sheet elev-lg">'+
+    '<div style="display:flex;align-items:flex-start;gap:14px">'+
+    '<span aria-hidden="true" style="flex:none;width:46px;height:46px;border-radius:999px;background:'+(step.accent===2?'var(--color-accent-2-200)':'var(--color-accent-200)')+';color:'+(step.accent===2?'var(--color-accent-2-900)':'var(--color-accent-800)')+';font:700 20px/46px var(--font-body);text-align:center">'+step.icon+'</span>'+
+    '<div class="col" style="flex:1;gap:3px;min-width:0">'+
+    '<span class="eyebrow">'+esc(step.kicker)+'</span>'+
+    '<h2 style="font-size:21px;line-height:1.15">'+esc(step.title)+'</h2></div></div>'+
+    '<p style="margin:0;font:500 14px/1.55 var(--font-body);color:var(--color-neutral-800)">'+esc(step.body)+'</p>'+
+    '<div class="col" style="gap:8px">';
+  step.points.forEach(function(p){
+    h += '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:var(--radius-lg);background:var(--color-neutral-100)">'+
+      '<span aria-hidden="true" style="flex:none;width:6px;height:6px;border-radius:999px;background:var(--color-accent-500);margin-top:6px"></span>'+
+      '<span style="font:600 12.5px/1.45 var(--font-body);color:var(--color-neutral-800)">'+esc(p)+'</span></div>';
+  });
+  h += '</div><div style="display:flex;align-items:center;justify-content:center;gap:6px">';
+  TOUR.forEach(function(_,i){
+    h += '<span style="width:'+(i===S.tourStep?'20px':'6px')+';height:6px;border-radius:999px;background:'+(i===S.tourStep?'var(--color-accent-500)':'var(--color-neutral-300)')+';transition:all .3s ease"></span>';
+  });
+  h += '</div><div style="display:flex;gap:10px">'+
+    '<button type="button" class="btn btn-ghost" data-act="tourback" style="flex:none;min-height:46px;padding:0 18px;visibility:'+(S.tourStep===0?'hidden':'visible')+'">Back</button>'+
+    '<button type="button" class="btn btn-primary" data-act="tournext" style="flex:1;min-height:46px;font-size:15px">'+(S.tourStep===TOUR.length-1?'Start tracking':'Next')+'</button></div>'+
+    '<button type="button" data-act="tourskip" style="align-self:center;border:0;background:transparent;cursor:pointer;font:600 12px/1 var(--font-body);color:var(--color-neutral-600);padding:6px;text-decoration:underline">Skip the tour</button></div>';
+  el.innerHTML = h;
+}
+
+/* -------------------------------------------------------------- render */
+
+var TABS = [['today','Today'],['activity','Activity'],['trends','Trends'],['goals','Goals']];
+var lastTab = null;
+
+function render(){
+  var focusKey = null, selStart = null, selEnd = null;
+  var a = document.activeElement;
+  if(a && a.dataset && a.dataset.fk){
+    focusKey = a.dataset.fk;
+    try{ selStart = a.selectionStart; selEnd = a.selectionEnd; }catch(e){}
+  }
+
+  var pageEl = document.getElementById('page');
+  var keepScroll = S.tab === lastTab;
+  var scrollTop = keepScroll ? pageEl.scrollTop : 0;
+  lastTab = S.tab;
+
+  var title = S.tab === 'today' ? 'Today\u2019s plate' : S.tab === 'activity' ? 'Activity' : S.tab === 'trends' ? 'Trends' : 'Goals';
+  var head = '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">'+
+    '<div class="col" style="gap:2px"><span class="eyebrow">'+esc(fmtDay(new Date()))+'</span>'+
+    '<h1 style="font-size:29px;line-height:1.05">'+title+'</h1></div>'+
+    '<div style="flex:none;margin-top:4px;display:flex;align-items:center;gap:8px">'+
+    '<span class="tag tag-accent-2">'+PHASES[S.phase].label+'</span>'+
+    '<button type="button" data-act="opentour" aria-label="How to use this app" style="flex:none;width:30px;height:30px;border-radius:999px;border:1px solid var(--color-divider);background:var(--color-surface);cursor:pointer;font:700 14px/1 var(--font-body);color:var(--color-neutral-700)">?</button></div></div>';
+
+  var body = S.tab === 'today' ? todayView()
+           : S.tab === 'activity' ? activityView()
+           : S.tab === 'trends' ? trendsView() : goalsView();
+
+  pageEl.innerHTML = head + '<div class="col" style="gap:18px">' + body + '</div>';
+  pageEl.scrollTop = scrollTop;
+
+  document.getElementById('nav').innerHTML = TABS.map(function(t){
+    return '<button type="button" data-act="tab" data-v="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'><span class="dot"></span>'+t[1]+'</button>';
+  }).join('');
+
+  renderTour();
+
+  if(focusKey){
+    var el = document.querySelector('[data-fk="'+focusKey+'"]');
+    if(el){
+      el.focus({preventScroll:true});
+      if(selStart != null && el.setSelectionRange && el.type !== 'number'){
+        try{ el.setSelectionRange(selStart, selEnd); }catch(e){}
+      }
+    }
+  }
+}
+
+function update(){ save(); render(); }
+
+/* ------------------------------------------------------------- events */
+
+function setPath(path, value){
+  var parts = path.split('.');
+  if(parts.length === 1){ S[parts[0]] = value; }
+  else { S[parts[0]][parts[1]] = value; }
+}
+
+document.addEventListener('click', function(e){
+  var b = e.target.closest('[data-act]');
+  if(!b) return;
+  var act = b.dataset.act, v = b.dataset.v;
+  switch(act){
+    case 'tab': S.tab = v; break;
+    case 'cat': S.foodCat = v; S.query = ''; break;
+    case 'addfood': addFood(FOODS[+v]); break;
+    case 'togglecustom': S.customOpen = !S.customOpen; break;
+    case 'addmeal': addMeal(); break;
+    case 'delmeal': S.meals = S.meals.filter(function(m){ return String(m.id) !== v; }); break;
+    case 'effort': S.sessionDraft.effort = v; break;
+    case 'addsession': addSession(); break;
+    case 'delsession': S.sessions = S.sessions.filter(function(s){ return String(s.id) !== v; }); break;
+    case 'addplan': addPlan(); break;
+    case 'delplan': S.plan = S.plan.filter(function(p){ return String(p.id) !== v; }); break;
+    case 'phase': S.phase = v; break;
+    case 'profile': S.profile = v; break;
+    case 'applyphase': applyPhase(); break;
+    case 'balance': balance(); break;
+    case 'reset': resetAll(); return;
+    case 'opentour': S.tourOpen = true; S.tourStep = 0; S.tab = TOUR[0].tab; break;
+    case 'tournext':
+      if(S.tourStep >= TOUR.length-1){ S.tourOpen = false; S.tourStep = 0; S.tab = 'today'; }
+      else { S.tourStep++; S.tab = TOUR[S.tourStep].tab; }
+      break;
+    case 'tourback': S.tourStep = Math.max(0, S.tourStep-1); S.tab = TOUR[S.tourStep].tab; break;
+    case 'tourskip': S.tourOpen = false; S.tourStep = 0; S.tab = 'today'; break;
+    default: return;
+  }
+  update();
+});
+
+document.addEventListener('input', function(e){
+  var el = e.target;
+  if(el.dataset.in){ setPath(el.dataset.in, el.value); update(); return; }
+  if(el.dataset.goal){ setGoal(el.dataset.goal, el.value); update(); return; }
+  if(el.dataset.plan){
+    var id = el.dataset.plan, f = el.dataset.pf;
+    S.plan = S.plan.map(function(p){
+      if(String(p.id) !== id) return p;
+      var c = {}; for(var k in p) c[k] = p[k];
+      c[f] = Math.max(0, Math.round(num(el.value)));
+      return c;
+    });
+    update(); return;
+  }
+});
+
+/* weight is logged for the trend line when the field settles */
+document.addEventListener('change', function(e){
+  if(e.target.dataset.in === 'weight'){
+    S.weight = Math.max(30, Math.round(num(S.weight, 70) * 10) / 10);
+    logWeight(S.weight);
+    update();
+  }
+});
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && S.tourOpen){ S.tourOpen = false; S.tourStep = 0; update(); }
+});
+
+/* seed today's weight so the trend line has a starting point */
+if(!S.weightLog.length) logWeight(S.weight);
+
+/* offline + installable; harmless if the file isn't deployed alongside */
+if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+
+update();
+})();
+</script>
+</body>
+</html>
